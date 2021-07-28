@@ -1,0 +1,349 @@
+swagger: "2.0"
+info:
+  title: Electoral Register API
+  description: API for managing the Electoral Register.
+  version: 1.0.0
+
+host: electoral-register-api.hackney.gov.uk
+basePath: /v1
+schemes:
+  - https
+consumes:
+  - application/json
+produces:
+  - application/json
+
+paths:
+  /application-forms:
+    post:
+      summary: Save an application form
+      tags:
+        - application-forms
+      description: Save an application form to the backing file store. This will be a file obtained from scanning in a paper form, or received as an email attachment.
+      consumes:
+       - application/octet-stream
+      responses:
+        201:
+          description: The application form has been saved successfully. Returns a response indicating the ID of the saved form.
+          headers:
+            Location:
+              type: string
+              description: The URL of the created application form
+          schema:
+            $ref: '#/definitions/created-response'
+  /application-forms/{id}:
+    get:
+      summary: Retrieve a saved application form
+      tags:
+        - application-forms
+      description: Retrieve a saved application form from the backing file store.
+      parameters:
+        - name: id
+          in: path
+          description: Application form ID
+          type: integer
+          required: true
+      produces:
+        - application/octet-stream
+      responses:
+        200:
+          description: The application form
+          schema:
+            type: file
+  /applications:
+    post:
+      summary: Create a new application
+      tags:
+        - applications
+      description: Create a new application.
+      parameters:
+        - name: application
+          in: body
+          schema:
+            $ref: '#/definitions/application'
+      responses:
+        201:
+          description: The application has been created successfully. Returns a response indicating the ID of the created application.
+          headers:
+            Location:
+              type: string
+              description: The URL of the created application
+          schema:
+            $ref: '#/definitions/created-response'
+    # TODO: Add pagination query parameters to this endpoint, and pagination details to the response
+    get:
+      summary: List applications
+      tags:
+        - applications
+      description: List applications, optionally filtered by the application status
+      parameters:
+        - in: query
+          name: status
+          type: string
+          enum: [new, sent_to_ier, verification_success, verification_failed, unverified]
+          description: Filter parameter for application status
+        - in: query
+          name: sort_field
+          type: string
+          enum: [creation_date, verification_date]
+        - in: query
+          name: sort_order
+          type: string
+          enum: [asc, desc]
+      responses:
+        200:
+          description: Applications matching the query
+          schema:
+            $ref: '#/definitions/applications'
+  /applications/summary:
+    get:
+      summary: Return a summary of open applications
+      tags:
+        - applications
+      description: Returns a breakdown of open applications (those that have not been added to the register) by status
+      responses:
+        200:
+          description: Count of applications by status
+          schema:
+            type: object
+            properties:
+              new:
+                type: integer
+                description: Number of applications created in the EMS but not yet sent to IER
+              sent_to_ier:
+                type: integer
+                description: Number of applications sent to IER for verification and awaiting response
+              verification_success:
+                type: integer
+                description: Number of applications retrieved from IER with verification succeeced
+              verification_failed:
+                type: integer
+                description: Number of applications retrieved from IER with verification failed
+              unverified:
+                type: integer
+                description: Number of applications retrieved from IER that could not be verified due to missing DOB or NINO
+  /applications/{id}:
+    patch:
+      summary: Update an application
+      tags:
+        - applications
+      description: Update fields on an application.
+      parameters:
+        - name: id
+          in: path
+          description: Application ID
+          type: integer
+          required: true
+        - name: application
+          in: body
+          schema:
+            $ref: '#/definitions/application'
+      responses:
+        204:
+          description: Application successfully updated
+    get:
+      summary: Retrieve an application
+      tags:
+        - applications
+      description: Retrieve an application by ID
+      parameters:
+        - name: id
+          in: path
+          description: Application ID
+          type: integer
+          required: true
+      responses:
+        200:
+          description: The requested application
+          schema:
+            $ref: '#/definitions/application'
+  /job-audit-logs:
+    post:
+      summary: Create a job audit log
+      tags:
+        - audit
+      description: Create an audit log corresponding to the start, end, or unexpected error in a lambda scheduled job
+      parameters:
+        - name: audit-log
+          in: body
+          schema:
+            $ref: '#/definitions/audit-log'
+      responses:
+        204:
+          description: The audit log was created successfully
+    # TODO: Add pagination query parameters to this endpoint, and pagination details to the response
+    get:
+      summary: Retrieve job audit logs
+      tags:
+        - audit
+      description: Return lambda job audit logs, ordered by most recent first
+      responses:
+        200:
+          description: List of the requested audit logs.
+          schema:
+            $ref: '#/definitions/audit-logs'
+  /registered-electors:
+    post:
+      summary: Add an elector to the register
+      tags:
+        - register
+      description: Save an elector to the register. It is expected that clients will create electors based on data from a verified application also stored in the system.
+      parameters:
+        - name: elector
+          in: body
+          schema:
+            $ref: '#/definitions/elector'
+      responses:
+        201:
+          description: The elector has been added to the register. Returns a response indicating the ID of the new elector on the register.
+          headers:
+            Location:
+              type: string
+              description: The URL of the created elector
+          schema:
+            $ref: '#/definitions/created-response'
+    # TODO: Add pagination query parameters to this endpoint, and pagination details to the response
+    get:
+      summary: Search electors on the register
+      tags:
+        - register
+      description: Search the register by name or postcode
+      parameters:
+        - in: query
+          name: name
+          type: string
+          description: Search parameter for elector name
+        - in: query
+          name: postcode
+          type: string
+          description: Search parameter for elector postcode
+      responses:
+        200:
+          description: List of electors matching the query parameters
+          schema:
+            $ref: '#/definitions/electors'
+  /registered-electors/{id}:
+    patch:
+      summary: Update an elector on the register
+      tags:
+        - register
+      description: >
+        Update an elector. According to the Electoral Commission guidance, only name and open register status
+        can be updated on the register. For other changes to an elector's details, a new registration must take
+        place
+      parameters:
+        - name: id
+          in: path
+          description: Elector ID
+          type: integer
+          required: true
+        - name: updates
+          in: body
+          description: The updated fields on the elector
+          schema:
+            type: object
+            properties:
+              first_name:
+                type: string
+              middle_names:
+                type: string
+              last_name:
+                type: string
+              open_register:
+                type: boolean
+      responses:
+        204:
+          description: Elector has been successfully updated
+    get:
+      summary: Retrieve an elector
+      tags:
+        - register
+      description: Fetch the information held on the register for a single elector
+      parameters:
+        - name: id
+          in: path
+          description: Elector ID
+          type: integer
+          required: true
+      responses:
+        200:
+          description: The retrieved elector
+          schema:
+            $ref: '#/definitions/elector'
+
+tags:
+  - name: application-forms
+    description: Scanned paper forms uploaded to the system
+  - name: applications
+    description: In-progress and completed applications to join the electoral register
+  - name: audit
+    description: Auditing information
+  - name: register
+    description: Managing the electoral register
+
+# TODO: For some of these definitions the id won't be present when POST-ing a new entity. Need to reflect that somehow in the definitions.
+definitions:
+  created-response:
+    type: object
+    properties:
+      id:
+        type: integer
+    required:
+      - id
+  audit-log:
+    type: object
+    properties:
+      id:
+        type: integer
+      timestamp:
+        type: string
+      job:
+        type: string
+        description: The class of job the audit log refers to
+      status:
+        type: string
+        enum: [started, finished, error]
+      details:
+        type: string
+    required:
+      - id
+      - timestamp
+      - job
+      - status
+  audit-logs:
+    type: object
+    properties:
+      audit-logs:
+        type: array
+        items:
+          $ref:  "#/definitions/audit-log"
+  # TODO: Fill this out with the necessary fields. This will likely be very similar to the fields required by IER when uploading an application.
+  application:
+    type: object
+    properties:
+      id:
+        type: integer
+    required:
+      - id
+  applications:
+    type: object
+    properties:
+      applications:
+        type: array
+        items:
+          $ref:  "#/definitions/application"
+  # TODO: Fill this out with the necessary fields. Will be significant overlap with the fields on an application
+  elector:
+    type: object
+    properties:
+      id:
+        type: integer
+    required:
+      - id
+  electors:
+    type: object
+    properties:
+      electors:
+        type: array
+        items:
+          $ref:  "#/definitions/elector"

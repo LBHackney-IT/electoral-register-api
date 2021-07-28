@@ -1,53 +1,20 @@
-# LBH Base API
+# Electoral Register API
 
-Base API is a boilerplate code for being reused for new APIs for LBH
+This is the initial repository for the Electoral Register API. More information about the Electoral Register project, including architecture diagrams, can be found in
+the [frontend repository](https://github.com/LBHackney-IT/lbh-electoral-register-frontend).
+
+This repo contains a draft API spec in `swagger.yml`. This isn't fully complete, but is intended to act as documentation for the intended direction of the API.
+It's intended that this API definition will evolve as the business logic becomes more clear.
+It can be viewed using any swagger renderer (eg an editor plugin, or by copying it into https://editor.swagger.io/)
+
+At present this repository is a copy of https://github.com/LBHackney-IT/lbh-base-api, with renaming carried out, and DynamoDB code removed.
+
+The rest of this readme is taken from the Base API, so will need adapting as development on this API continues.
 
 ## Stack
 
 - .NET Core as a web framework.
 - nUnit as a test framework.
-
-## Dependencies
-
-- Universal Housing Simulator
-
-## Contributing
-
-### Setup
-
-1. Install [Docker][docker-download].
-2. Install [AWS CLI][AWS-CLI].
-3. Clone this repository.
-4. Rename the initial template.
-5. Open it in your IDE.
-
-### Renaming
-
-The renaming of `base-api` into `SomethingElseApi` can be done by running a Renamer powershell script. To do so:
-1. Open the powershell and navigate to this directory's root.
-2. Run the script using the following command:
-```
-.\Renamer.ps1 -apiName My_Api
-```
-
-If your ***script execution policy*** prevents you from running the script, you can temporarily ***bypass*** that with:
-```
-powershell -noprofile -ExecutionPolicy Bypass -file .\Renamer.ps1 -apiName My_Api
-```
-
-Or you can change your execution policy, prior to running the script, permanently with _(this disables security so, be cautious)_:
-```
-Set-ExecutionPolicy Unrestricted
-```
-
-After the renaming is done, the ***script will ask you if you want to delete it as well***, as it's useless now - It's your choice.
-
-#### On OSX
-
-Use Docker to run this script on Macs:
-```
-docker run -it -v `pwd`:/app mcr.microsoft.com/powershell
-```
 
 ### Development
 
@@ -143,20 +110,3 @@ If changes to the database schema are made then the docker image for the databas
 - As close to real time as possible
 - Observable monitoring in place
 - Should not affect any existing databases
-
-## Contacts
-
-### Active Maintainers
-
-- **Selwyn Preston**, Lead Developer at London Borough of Hackney (selwyn.preston@hackney.gov.uk)
-- **Mirela Georgieva**, Lead Developer at London Borough of Hackney (mirela.georgieva@hackney.gov.uk)
-- **Matt Keyworth**, Lead Developer at London Borough of Hackney (matthew.keyworth@hackney.gov.uk)
-
-### Other Contacts
-
-- **Rashmi Shetty**, Product Owner at London Borough of Hackney (rashmi.shetty@hackney.gov.uk)
-
-[docker-download]: https://www.docker.com/products/docker-desktop
-[universal-housing-simulator]: https://github.com/LBHackney-IT/lbh-universal-housing-simulator
-[made-tech]: https://madetech.com/
-[AWS-CLI]: https://aws.amazon.com/cli/
